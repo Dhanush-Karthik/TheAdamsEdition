@@ -92,6 +92,39 @@ function encryptPassword(password) {
   return hashedPassword;
 }
 
+// Get user info by ID
+app.get("/user-info/:id", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const user = await User.findById(userId).select("-password");
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+// Update a user by ID
+app.put("/users/:id", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const updatedUser = req.body;
+      const user = await User.findByIdAndUpdate(userId, updatedUser, {
+        new: true,
+      }).select("-password");
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
 // Start the server
 app.listen(3000, () => {
   console.log("Server is running on port 3000");

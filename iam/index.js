@@ -10,6 +10,52 @@ const userSchema = require("./userSchema");
 
 const User = mongoose.model("User", userSchema);
 
+// Admin endpoint
+app.post("/admin", async (req, res) => {
+    try {
+      const { email, password } = req.body;
+      const encryptedPassword = encryptPassword(password); // Encrypt the password
+      const newUser = new User({
+        email,
+        emailVerified: false,
+        roles: ["admin"],
+        password: encryptedPassword,
+      });
+      await newUser.save();
+      const newUserWithoutPassword = newUser.toObject();
+      delete newUserWithoutPassword.password;
+      res.status(201).json(newUserWithoutPassword);
+    } catch (error) {
+      res.status(400).json({ error: error.message });
+    }
+  });
+  
+  // Admin usage
+  // Get all users only for development
+  app.get("/users", async (req, res) => {
+    try {
+      const users = await User.find();
+      res.json(users);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
+  // Delete a user by ID
+  app.delete("/users/:id", async (req, res) => {
+    try {
+      const userId = req.params.id;
+      const user = await User.findByIdAndDelete(userId).select("-password");
+      if (user) {
+        res.json(user);
+      } else {
+        res.status(404).json({ error: "User not found" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+  
 // Public Endpoints
 // Register a user
 app.post("/register", async (req, res) => {
